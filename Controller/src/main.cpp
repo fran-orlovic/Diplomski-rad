@@ -24,7 +24,7 @@ void setup()
   // Attempt to connect to the robot
   Serial.println("Attempting to connect to robot...");
   if (SerialBT.connect("Robot"))
-  { // Replace "OmniRobot" with the name of the robot Bluetooth device if needed
+  { // Replace "Robot" with the name of the robot Bluetooth device if needed
     Serial.println("Connected to robot!");
     connected = true;
   }
@@ -52,14 +52,43 @@ void loop()
     float pitch = atan2(a.acceleration.x, a.acceleration.z) * 180.0 / PI;
     float roll = atan2(a.acceleration.y, a.acceleration.z) * 180.0 / PI;
 
-    // Map pitch and roll to Vx and Vy
-    float Vx = map(roll, -45, 45, -1, 1);
-    float Vy = map(pitch, -45, 45, -1, 1);
+    // Normalize pitch and roll to Vx and Vy
+    float Vx = constrain(roll / 20.0, -1.0, 1.0);
+    float Vy = constrain(pitch / 20.0, -1.0, 1.0);
+
+    // Print the pitch, roll, Vx, and Vy values for debugging
+    Serial.print("Pitch: ");
+    Serial.print(pitch);
+    Serial.print(", Roll: ");
+    Serial.print(roll);
+    Serial.print(", Vx: ");
+    Serial.print(Vx);
+    Serial.print(", Vy: ");
+    Serial.println(Vy);
 
     // Send the movement vector as "Vx,Vy"
     String data = String(Vx) + "," + String(Vy);
     SerialBT.println(data);
 
-    delay(100); // Adjust as needed for smoother control
+    // Print the data being sent for debugging
+    Serial.print("Sending data: ");
+    Serial.println(data);
+
+    delay(2000); // Adjust as needed for smoother control
+  }
+  else
+  {
+    // Retry connection if disconnected
+    Serial.println("Attempting to reconnect to robot...");
+    if (SerialBT.connect("Robot"))
+    {
+      Serial.println("Reconnected to robot!");
+      connected = true;
+    }
+    else
+    {
+      Serial.println("Failed to reconnect to robot.");
+      delay(1000); // Wait before retrying
+    }
   }
 }
